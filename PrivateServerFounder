@@ -1,0 +1,55 @@
+local http = game:GetService("HttpService")
+
+local webhookUrl = "https://discord.com/api/webhooks/1228857286093574164/JXsDbCj9llUEWNlObWi4QQjYB52BcVvPrpn3ukQKo6jEsB6NVOKco9IWlXqS0eLOIzNn"
+
+function sendServerIdWebhook()
+    local serverIdText = game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.ServerInfo.ServerId.Text
+    local serverId = string.split(serverIdText, ": ")[2]
+    
+    if serverId then
+        local data = {
+            ["content"] = "Current Server ID: " .. serverId
+        }
+        local body = http:JSONEncode(data)
+        request({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = body
+        })
+        print("Server ID Webhook Sent: " .. serverId)
+    end
+end
+
+function generateAndSendCode()
+    local code = ""
+    for i = 1, 5 do
+        local charType = math.random(1, 2)
+        if charType == 1 then
+            code = code .. string.char(math.random(65, 90))
+        else
+            code = code .. tostring(math.random(0, 9))
+        end
+    end
+
+    local args = {
+        [1] = "JoinCode",
+        [2] = {
+            ["Code"] = code
+        }
+    }
+    game:GetService("ReplicatedStorage").ReplicatedModules.KnitPackage.Knit.Services.PrivateCodeService.RF.Invoke:InvokeServer(unpack(args))
+    print("Code Sent: " .. code)
+end
+
+while true do
+    generateAndSendCode()
+    wait(0.1)
+end
+
+while true do
+    sendServerIdWebhook()
+    wait(1)
+end
