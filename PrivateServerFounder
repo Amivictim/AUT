@@ -1,17 +1,19 @@
 local http = game:GetService("HttpService")
-
-local webhookUrl = "https://discord.com/api/webhooks/1228857286093574164/JXsDbCj9llUEWNlObWi4QQjYB52BcVvPrpn3ukQKo6jEsB6NVOKco9IWlXqS0eLOIzNn"
+local webhookUrl = webcock
+local mainPlaceId = 5130598377
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
 
 function sendServerIdWebhook()
-    local serverIdText = game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.ServerInfo.ServerId.Text
+    local serverIdText = Players.LocalPlayer.PlayerGui.UI.Menus.ServerInfo.ServerId.Text
     local serverId = string.split(serverIdText, ": ")[2]
-    
+
     if serverId then
         local data = {
             ["content"] = "Current Server ID: " .. serverId
         }
         local body = http:JSONEncode(data)
-        request({
+        local response = request({
             Url = webhookUrl,
             Method = "POST",
             Headers = {
@@ -19,7 +21,15 @@ function sendServerIdWebhook()
             },
             Body = body
         })
-        print("Server ID Webhook Sent: " .. serverId)
+
+        return response.Success
+    end
+    return false
+end
+
+function teleportToMainPlace()
+    if game.PlaceId ~= mainPlaceId then
+        TeleportService:Teleport(mainPlaceId, Players.LocalPlayer)
     end
 end
 
@@ -41,18 +51,22 @@ function generateAndSendCode()
                 ["Code"] = code
             }
         }
-        game:GetService("ReplicatedStorage").ReplicatedModules.KnitPackage.Knit.Services.PrivateCodeService.RF.Invoke:InvokeServer(unpack(args))
-        print("Code Sent: " .. code)
+
+        local success, errorMessage = pcall(function()
+            game:GetService("ReplicatedStorage").ReplicatedModules.KnitPackage.Knit.Services.PrivateCodeService.RF.Invoke:InvokeServer(unpack(args))
+        end)
 
         wait(0.1)
     end
 end
 
-for i = 1, 200 do
-    coroutine.wrap(generateAndSendCode)()
-end
-
 while true do
-    sendServerIdWebhook()
-    wait(1)
+    if game.PlaceId == mainPlaceId then
+        coroutine.wrap(generateAndSendCode)()
+    else
+        if sendServerIdWebhook() then
+            teleportToMainPlace()
+        end
+    end
+    wait(0.1)
 end
