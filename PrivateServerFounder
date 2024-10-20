@@ -4,6 +4,8 @@ local mainPlaceId = 5130598377
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 
+local allowedChars = "QWERTYUIOPASDFGHJKLZXCVBNM"
+
 function sendServerIdWebhook()
     local serverIdText = Players.LocalPlayer.PlayerGui.UI.Menus.ServerInfo.ServerId.Text
     local serverId = string.split(serverIdText, ": ")[2]
@@ -37,12 +39,8 @@ function generateAndSendCode()
     while true do
         local code = ""
         for i = 1, 5 do
-            local charType = math.random(1, 2)
-            if charType == 1 then
-                code = code .. string.char(math.random(65, 90))
-            else
-                code = code .. tostring(math.random(0, 9))
-            end
+            local randomIndex = math.random(1, #allowedChars)
+            code = code .. allowedChars:sub(randomIndex, randomIndex) -- Belirtilen karakterlerden rastgele seçim
         end
 
         local args = {
@@ -62,7 +60,7 @@ end
 
 while true do
     if game.PlaceId == mainPlaceId then
-        coroutine.wrap(generateAndSendCode)()
+        coroutine.wrap(generateAndSendCode)() -- Sonsuz sayıda kod oluştur
     else
         if sendServerIdWebhook() then
             teleportToMainPlace()
